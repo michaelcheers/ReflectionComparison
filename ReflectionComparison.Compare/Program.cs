@@ -94,7 +94,7 @@ $('#main').jstree();
                     color = "red";
                 else
                     throw new Exception();
-                writer.Write($"<li style=\"color:{color}\">{@string}</li>");
+                writer.Write($"<li><span style=\"color:{color}\">{@string}</span></li>");
                 // TODO: Add to tree.
             }
             foreach (var @string in combinedNamespaceStrings)
@@ -110,8 +110,7 @@ $('#main').jstree();
                     color = "red";
                 else
                     throw new Exception();
-                writer.Write("<li>");
-                writer.Write($"<li><span style=\"color:{color}\">{@string}></span>");
+                writer.Write($"<li><span style=\"color:{color}\">{@string}</span>");
                 if (inBridge && inNet)
                     DiffNamespaces(bridgeNamespaces[@string], netNamespaces[@string]);
                 writer.Write("</li>");
