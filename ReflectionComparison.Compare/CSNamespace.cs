@@ -12,6 +12,13 @@ namespace ReflectionComparison.Compare
         public List<CSNamespace> NestedNamespaces = new List<CSNamespace>();
         public List<CSType> NestedClasses = new List<CSType>();
 
+        public void SortAll ()
+        {
+            NestedNamespaces = NestedNamespaces.OrderBy(v => v.name).ToList();
+            NestedClasses = NestedClasses.OrderBy(v => v.Name).ToList();
+            NestedNamespaces.ForEach(v => v.SortAll());
+        }
+
         public static CSNamespace FromText(string text)
         {
             CSNamespace result = new CSNamespace();

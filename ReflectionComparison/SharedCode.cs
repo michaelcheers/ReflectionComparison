@@ -36,8 +36,9 @@ namespace ReflectionComparison
         SetProperty = GetProperty * 2
 }
 #if !COMPARE
-class SharedCode
+static class SharedCode
     {
+        static string FullName_(this Type type) => type.FullName?.Replace(" ", "").Replace(',', '&');
         static readonly Type[] distypes =
                 {
                     typeof(System.Threading.Tasks.Task<>),
@@ -64,7 +65,7 @@ class SharedCode
                 if (distypes.Contains(type) || type.IsNotPublic)
                     continue;
                 result.AppendLine();
-                result.Append(type.FullName);
+                result.Append(type.FullName_());
                 if (type.IsClass)
                     attributes |= Attributes.Class;
                 else if (type.IsInterface)
@@ -102,13 +103,13 @@ class SharedCode
                     {
                         var method = (MethodBase)member;
                         result.Append("(");
-                        result.Append(string.Join(", ", Array.ConvertAll(method.GetParameters(), v => $"{v.ParameterType?.FullName ?? "Unknown"} {v.Name}")));
+                        result.Append(string.Join(", ", Array.ConvertAll(method.GetParameters(), v => $"{v.ParameterType?.FullName_() ?? "Unknown"} {v.Name}")));
                         result.Append(")");
                         attributes |= Attributes.Method;
                         if (method is MethodInfo)
                         {
                             result.Append(" => ");
-                            result.Append(((MethodInfo)method).ReturnType?.FullName ?? "Unknown");
+                            result.Append(((MethodInfo)method).ReturnType?.FullName_() ?? "Unknown");
                             if (method.IsVirtual)
                                 attributes |= Attributes.Virtual;
                             if (method.IsAbstract)
@@ -128,7 +129,7 @@ class SharedCode
                             attributes |= Attributes.Field;
                             if (field.IsStatic)
                                 attributes |= Attributes.Static;
-                            result.Append(field.FieldType.FullName);
+                            result.Append(field.FieldType.FullName_());
                         }
                         else if (member is PropertyInfo)
                         {
@@ -140,7 +141,7 @@ class SharedCode
                                 attributes |= Attributes.Static;
                             if ((prop.GetMethod?.IsAbstract ?? false) || (prop.SetMethod?.IsAbstract ?? false))
                                 attributes |= Attributes.Abstract;
-                            result.Append(prop.PropertyType.FullName);
+                            result.Append(prop.PropertyType.FullName_());
                             if (prop.GetMethod?.IsPublic ?? false)
                                 attributes |= Attributes.GetProperty;
                             if (prop.SetMethod?.IsPublic ?? false)
@@ -153,7 +154,7 @@ class SharedCode
                             attributes |= Attributes.Field;
                             if (event1.AddMethod.IsStatic)
                                 attributes |= Attributes.Static;
-                            result.Append(event1.AddMethod.GetParameters()[0].ParameterType.FullName);
+                            result.Append(event1.AddMethod.GetParameters()[0].ParameterType.FullName_());
                         }
                     }
                     result.Append("-");
