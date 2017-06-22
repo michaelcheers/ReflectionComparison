@@ -115,7 +115,7 @@ $('#main').jstree();
                     throw new NotImplementedException();
                 writer.Write("<li data-jstree='{\"icon\":\"dist/images/");
                 writer.Write(icon);
-                writer.Write(".png\"'}'><span style=\"color:");
+                writer.Write(".png\"}'><span style=\"color:");
                 writer.Write(color);
                 writer.Write("\">");
                 writer.Write(@string);
