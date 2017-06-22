@@ -33,7 +33,7 @@ namespace ReflectionComparison.Compare
 <html>
 <head>
   <meta charset=""utf-8"">
-  <title>jsTree test</title>
+  <title>Comparison of Bridge and .NET</title>
   <!-- 2 load the theme CSS file -->
   <link rel=""stylesheet"" href=""dist/themes/default/style.min.css"" />
 </head>
@@ -94,15 +94,6 @@ $('#main').jstree();
             {
                 bool inBridge = bridgeMembers.ContainsKey(@string);
                 bool inNet = netMembers.ContainsKey(@string);
-                string color;
-                if (inBridge && inNet)
-                    color = "black";
-                else if (inBridge)
-                    color = "blue";
-                else if (inNet)
-                    color = "red";
-                else
-                    throw new Exception();
                 var detectedProperty = inNet ? netMembers[@string] : bridgeMembers[@string];
                 string icon;
                 if (detectedProperty.Attributes.HasFlag(Attributes.Field))
@@ -116,13 +107,12 @@ $('#main').jstree();
                 writer.Write("<li data-jstree='{\"icon\":\"dist/images/");
                 writer.Write(icon);
                 writer.Write(".png\"}'><span style=\"color:");
-                writer.Write(color);
+                CompareSupport(inBridge, inNet);
                 writer.Write("\">");
                 writer.Write(@string);
                 writer.Write("</span>");
                 if (inNet && inBridge)
-                    if (netMembers[@string].Attributes != bridgeMembers[@string].Attributes)
-                        writer.Write(@"<font color=""purple"">*</font>");
+                    CompareAttributes(netMembers[@string].Attributes, bridgeMembers[@string].Attributes);
                 writer.Write("</li>");
             }
             writer.Write("</ul>");
@@ -155,16 +145,9 @@ $('#main').jstree();
             {
                 bool inBridge = bridgeNamespaces.ContainsKey(@string);
                 bool inNet = netNamespaces.ContainsKey(@string);
-                string color;
-                if (inBridge && inNet)
-                    color = "black";
-                else if (inBridge)
-                    color = "blue";
-                else if (inNet)
-                    color = "red";
-                else
-                    throw new Exception();
-                writer.Write($"<li data-jstree='{"{"}\"icon\":\"dist/images/namespace.png\"{"}"}'><span style=\"color:{color}\">{@string}</span>");
+                writer.Write($"<li data-jstree='{"{"}\"icon\":\"dist/images/namespace.png\"{"}"}'><span style=\"color:");
+                CompareSupport(inBridge, inNet);
+                writer.Write($"\">{@string}</span>");
                 if (inBridge && inNet)
                     DiffNamespaces(bridgeNamespaces[@string], netNamespaces[@string]);
                 writer.Write("</li>");
@@ -174,17 +157,8 @@ $('#main').jstree();
             {
                 bool inBridge = bridgeTypes.ContainsKey(@string);
                 bool inNet = netTypes.ContainsKey(@string);
-                string color;
-                if (inBridge && inNet)
-                    color = "black";
-                else if (inBridge)
-                    color = "blue";
-                else if (inNet)
-                    color = "red";
-                else
-                    throw new Exception();
                 writer.Write("<li data-jstree='{\"icon\":\"dist/images/class.png\"}'><span style=\"color:");
-                writer.Write(color);
+                CompareSupport(inBridge, inNet);
                 writer.Write("\">");
                 writer.Write(@string);
                 writer.Write("</span>");
@@ -192,12 +166,33 @@ $('#main').jstree();
                 {
                     var bridgeType = bridgeTypes[@string];
                     var netType = netTypes[@string];
+                    CompareAttributes(bridgeType.Attributes, netType.Attributes);
                     DiffTypes(bridgeType as CSMemberedType, netType as CSMemberedType);
                 }
                 writer.Write("</li>");
                 // TODO: Add to tree.
             }
             writer.Write("</ul>");
+        }
+
+        public static void CompareAttributes (Attributes bridgeAttributes, Attributes netAttributes)
+        {
+            if (netAttributes != bridgeAttributes)
+                writer.Write($@"<font color=""purple"" title=""Bridge -> {bridgeAttributes} .NET -> {netAttributes}"">*</font>");
+        }
+
+        public static void CompareSupport (bool inBridge, bool inNet)
+        {
+            string color;
+            if (inBridge && inNet)
+                color = "black";
+            else if (inBridge)
+                color = "blue";
+            else if (inNet)
+                color = "red";
+            else
+                throw new Exception();
+            writer.Write(color);
         }
     }
 }
