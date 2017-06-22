@@ -33,7 +33,8 @@ namespace ReflectionComparison
         Constructor = Method * 2,
         Property = Constructor * 2,
         GetProperty = Property * 2,
-        SetProperty = GetProperty * 2
+        SetProperty = GetProperty * 2,
+        Delegate = SetProperty * 2
 }
 #if !COMPARE
 static class SharedCode
@@ -63,6 +64,8 @@ static class SharedCode
                 Attributes attributes = 0;
                 var type = types[n - 1];
                 if (distypes.Contains(type) || type.IsNotPublic)
+                    continue;
+                if (type.FullName.StartsWith("<PrivateImplementationDetails>"))
                     continue;
                 result.AppendLine();
                 result.Append(type.FullName_());

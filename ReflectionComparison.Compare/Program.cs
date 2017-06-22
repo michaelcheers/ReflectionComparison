@@ -57,6 +57,76 @@ $('#main').jstree();
         }
 
         static StreamWriter writer;
+
+        static void DiffTypes (CSMemberedType bridgeType, CSMemberedType netType)
+        {
+            if (bridgeType == null || netType == null)
+                return;
+            HashSet<string> membersHash = new HashSet<string>();
+            Dictionary<string, CSMember> MembersOf(CSMemberedType type)
+            {
+                string NameOf (CSMember member)
+                {
+                    CSMethod csMethod;
+                    if ((csMethod = member as CSMethod) != null)
+                    {
+                        return member.Name + "(" + string.Join(", ", csMethod.Parameters.ConvertAll(v2 => v2.Type)) + ")";
+                    }
+                    else
+                        return member.Name;
+                }
+                var dic = new Dictionary<string, CSMember>();
+                foreach (var member in type.Members)
+                {
+                    var name = NameOf(member);
+                    if (!dic.ContainsKey(name))
+                    {
+                        dic.Add(name, member);
+                        membersHash.Add(name);
+                    }
+                }
+                return dic;
+            }
+            var bridgeMembers = MembersOf(bridgeType);
+            var netMembers = MembersOf(netType);
+            writer.Write("<ul>");
+            foreach (var @string in membersHash.OrderBy(v => v))
+            {
+                bool inBridge = bridgeMembers.ContainsKey(@string);
+                bool inNet = netMembers.ContainsKey(@string);
+                string color;
+                if (inBridge && inNet)
+                    color = "black";
+                else if (inBridge)
+                    color = "blue";
+                else if (inNet)
+                    color = "red";
+                else
+                    throw new Exception();
+                var detectedProperty = inNet ? netMembers[@string] : bridgeMembers[@string];
+                string icon;
+                if (detectedProperty.Attributes.HasFlag(Attributes.Field))
+                    icon = "field";
+                else if (detectedProperty.Attributes.HasFlag(Attributes.Property))
+                    icon = "property";
+                else if (detectedProperty.Attributes.HasFlag(Attributes.Method))
+                    icon = "method";
+                else
+                    throw new NotImplementedException();
+                writer.Write("<li data-jstree='{\"icon\":\"dist/images/");
+                writer.Write(icon);
+                writer.Write(".png\"'}'><span style=\"color:");
+                writer.Write(color);
+                writer.Write("\">");
+                writer.Write(@string);
+                writer.Write("</span>");
+                if (inNet && inBridge)
+                    if (netMembers[@string].Attributes != bridgeMembers[@string].Attributes)
+                        writer.Write(@"<font color=""purple"">*</font>");
+                writer.Write("</li>");
+            }
+            writer.Write("</ul>");
+        }
         
         static void DiffNamespaces (CSNamespace bridgeNamespace, CSNamespace netNamespace)
         {
@@ -81,23 +151,7 @@ $('#main').jstree();
             }
             (Dictionary<string, CSType> bridgeTypes, Dictionary<string, CSNamespace> bridgeNamespaces) = CreateFrom(bridgeNamespace);
             (Dictionary<string, CSType> netTypes, Dictionary<string, CSNamespace> netNamespaces) = CreateFrom(netNamespace);
-            foreach (var @string in combinedTypeStrings)
-            {
-                bool inBridge = bridgeTypes.ContainsKey(@string);
-                bool inNet = netTypes.ContainsKey(@string);
-                string color;
-                if (inBridge && inNet)
-                    color = "black";
-                else if (inBridge)
-                    color = "blue";
-                else if (inNet)
-                    color = "red";
-                else
-                    throw new Exception();
-                writer.Write($"<li data-jstree='{"{"}\"icon\":\"dist/images/class.png\"{"}"}'><span style=\"color:{color}\">{@string}</span></li>");
-                // TODO: Add to tree.
-            }
-            foreach (var @string in combinedNamespaceStrings)
+            foreach (var @string in combinedNamespaceStrings.OrderBy(v => v))
             {
                 bool inBridge = bridgeNamespaces.ContainsKey(@string);
                 bool inNet = netNamespaces.ContainsKey(@string);
@@ -113,6 +167,33 @@ $('#main').jstree();
                 writer.Write($"<li data-jstree='{"{"}\"icon\":\"dist/images/namespace.png\"{"}"}'><span style=\"color:{color}\">{@string}</span>");
                 if (inBridge && inNet)
                     DiffNamespaces(bridgeNamespaces[@string], netNamespaces[@string]);
+                writer.Write("</li>");
+                // TODO: Add to tree.
+            }
+            foreach (var @string in combinedTypeStrings.OrderBy(v => v))
+            {
+                bool inBridge = bridgeTypes.ContainsKey(@string);
+                bool inNet = netTypes.ContainsKey(@string);
+                string color;
+                if (inBridge && inNet)
+                    color = "black";
+                else if (inBridge)
+                    color = "blue";
+                else if (inNet)
+                    color = "red";
+                else
+                    throw new Exception();
+                writer.Write("<li data-jstree='{\"icon\":\"dist/images/class.png\"}'><span style=\"color:");
+                writer.Write(color);
+                writer.Write("\">");
+                writer.Write(@string);
+                writer.Write("</span>");
+                if (inBridge && inNet)
+                {
+                    var bridgeType = bridgeTypes[@string];
+                    var netType = netTypes[@string];
+                    DiffTypes(bridgeType as CSMemberedType, netType as CSMemberedType);
+                }
                 writer.Write("</li>");
                 // TODO: Add to tree.
             }

@@ -80,6 +80,7 @@ namespace ReflectionComparison.Compare
                         member = new CSMethod();
                     else
                         throw new NotImplementedException();
+                    member.Attributes = attributes;
                     string name;
                     CSParameter[] parameters;
                     if (pIndex != -1)
