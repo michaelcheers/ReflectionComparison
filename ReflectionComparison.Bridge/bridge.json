@@ -2,7 +2,7 @@
   // The folder to output JavaScript (.js) files
   "output": "$(OutDir)/bridge/",
   "html": {
-    "disabled": true
+    "disabled": false
   }
 
 
